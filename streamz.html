@@ -1,89 +1,168 @@
+
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ebin Streamz - Live IPTV</title>
-  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0a0a; color: #fff; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
-    .header { background: #111; padding: 1rem; text-align: center; border-bottom: 1px solid #222; }
-    .header h1 { font-size: 1.5rem; color: #00d4ff; }
-    .container { display: flex; height: calc(100vh - 65px); }
-    .sidebar { width: 300px; background: #111; overflow-y: auto; border-right: 1px solid #222; }
-    .search { padding: 1rem; position: sticky; top: 0; background: #111; }
-    .search input { width: 100%; padding: .6rem; background: #1a1a1a; border: 1px solid #333; color: #fff; border-radius: 6px; }
-    .channel { padding: .8rem 1rem; cursor: pointer; border-bottom: 1px solid #1a1a1a; }
-    .channel:hover { background: #1a1a1a; }
-    .channel.active { background: #00d4ff20; border-left: 3px solid #00d4ff; }
-    .player-wrap { flex: 1; background: #000; display: flex; align-items: center; justify-content: center; }
-    video { width: 100%; height: 100%; max-height: 100vh; }
-    @media (max-width: 768px) {
-      .container { flex-direction: column; }
-      .sidebar { width: 100%; height: 200px; }
-    }
-  </style>
+<meta charset="UTF-8">
+<title>My IPTV Player</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background: #111;
+    color: white;
+    font-family: Arial, sans-serif;
+}
+
+header {
+    background: #222;
+    padding: 15px;
+    text-align: center;
+    font-size: 24px;
+}
+
+.container {
+    display: flex;
+    height: calc(100vh - 60px);
+}
+
+.sidebar {
+    width: 300px;
+    background: #1b1b1b;
+    overflow-y: auto;
+}
+
+.channel {
+    padding: 12px;
+    cursor: pointer;
+    border-bottom: 1px solid #333;
+}
+
+.channel:hover {
+    background: #333;
+}
+
+.player {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: black;
+}
+
+video {
+    width: 100%;
+    height: 100%;
+}
+</style>
+
 </head>
+
 <body>
-  <div class="header"><h1>Ebin Streamz</h1></div>
-  <div class="container">
-    <div class="sidebar">
-      <div class="search">
-        <input type="text" id="search" placeholder="Search channels..." onkeyup="filterChannels()">
-      </div>
-      <div id="channel-list"></div>
-    </div>
-    <div class="player-wrap">
-      <video id="video" controls autoplay></video>
-    </div>
-  </div>
 
-  <script>
-    // ADD YOUR LEGAL STREAMS HERE
-    const channels = [
-      { name: "NASA TV", url: "https://ntv1.akamaized.net/hls/live/2014075/NASA-NTV1-HLS/master.m3u8" },
-      { name: "Al Jazeera", url: "https://live-hls-web-aje.getaj.net/AJE/index.m3u8" },
-      { name: "Bloomberg", url: "https://bloomberg-bloomberg-1-eu.rakuten.wurl.tv/playlist.m3u8" },
-      { name: "Red Bull TV", url: "https://rbmn-live.akamaized.net/hls/live/590964/BoRB-AT/master.m3u8" }
-    ];
+<header>📺 My IPTV Player</header>
 
-    const video = document.getElementById('video');
-    const list = document.getElementById('channel-list');
-    let hls;
+<div class="container">
 
-    function loadChannel(url, el) {
-      document.querySelectorAll('.channel').forEach(c => c.classList.remove('active'));
-      el.classList.add('active');
-      
-      if (Hls.isSupported()) {
-        if (hls) hls.destroy();
-        hls = new Hls();
-        hls.loadSource(url);
-        hls.attachMedia(video);
-      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = url;
-      }
-    }
+<div class="sidebar" id="channels">
+Loading channels...
+</div>
 
-    function renderChannels(arr = channels) {
-      list.innerHTML = '';
-      arr.forEach((ch, i) => {
-        const div = document.createElement('div');
-        div.className = 'channel';
-        div.textContent = ch.name;
-        div.onclick = () => loadChannel(ch.url, div);
-        list.appendChild(div);
-        if (i === 0) loadChannel(ch.url, div);
-      });
-    }
+<div class="player">
+<video id="video" controls autoplay></video>
+</div>
 
-    function filterChannels() {
-      const q = document.getElementById('search').value.toLowerCase();
-      renderChannels(channels.filter(c => c.name.toLowerCase().includes(q)));
-    }
+</div>
 
-    renderChannels();
-  </script>
+
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+<script>
+
+const playlistURL =
+"https://m3u4u.com/m3u/26p5n37zqgf9xep2nv7j";
+
+
+async function loadPlaylist(){
+
+let response = await fetch(
+"https://api.allorigins.win/raw?url=" 
++ encodeURIComponent(playlistURL)
+);
+
+let text = await response.text();
+
+
+let lines = text.split("\n");
+
+let channels = document.getElementById("channels");
+channels.innerHTML = "";
+
+
+for(let i = 0; i < lines.length; i++){
+
+if(lines[i].startsWith("#EXTINF")) {
+
+let name = lines[i].split(",")[1];
+let url = lines[i+1];
+
+
+let item = document.createElement("div");
+
+item.className = "channel";
+
+item.innerText = name;
+
+
+item.onclick = function(){
+
+play(url);
+
+};
+
+
+channels.appendChild(item);
+
+}
+
+}
+
+}
+
+
+function play(url){
+
+let video = document.getElementById("video");
+
+
+if(Hls.isSupported()){
+
+let hls = new Hls();
+
+hls.loadSource(url);
+
+hls.attachMedia(video);
+
+}
+else {
+
+video.src = url;
+
+}
+
+}
+
+
+loadPlaylist();
+
+
+</script>
+
+
 </body>
+
 </html>
