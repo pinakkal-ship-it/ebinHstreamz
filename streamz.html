@@ -1,0 +1,113 @@
+[17-06-2026 13:53] Xy: <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ebin Streamz</title>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0a; color: #fff; display: flex; height: 100vh; overflow: hidden;
+    }
+   .sidebar {
+      width: 300px; background: #111; border-right: 1px solid #222;
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+   .header {
+      padding: 20px; background: linear-gradient(135deg, #e50914, #b20710);
+      font-size: 24px; font-weight: 700; letter-spacing: 1px;
+    }
+   .search { padding: 12px; background: #1a1a1a; }
+   .search input {
+      width: 100%; padding: 10px 14px; background: #0a0a0a; border: 1px solid #333;
+      border-radius: 6px; color: #fff; font-size: 14px;
+    }
+   .channel-list { flex: 1; overflow-y: auto; }
+   .channel {
+      padding: 14px 20px; border-bottom: 1px solid #1a1a1a; cursor: pointer;
+      transition: background 0.2s; font-size: 15px;
+    }
+   .channel:hover { background: #1f1f1f; }
+   .channel.active { background: #e50914; font-weight: 600; }
+   .main { flex: 1; display: flex; flex-direction: column; background: #000; }
+   .player-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+    video { width: 100%; height: 100%; max-height: 100vh; background: #000; }
+   .now-playing {
+      padding: 16px 24px; background: #111; border-top: 1px solid #222; font-size: 16px;
+    }
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+     .sidebar { width: 100%; height: 40vh; }
+     .main { height: 60vh; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sidebar">
+    <div class="header">EBIN STREAMZ</div>
+    <div class="search">
+      <input type="text" id="search" placeholder="Search channels...">
+    </div>
+    <div class="channel-list" id="channelList"></div>
+  </div>
+  <div class="main">
+    <div class="player-wrap">
+      <video id="player" controls autoplay></video>
+    </div>
+    <div class="now-playing" id="nowPlaying">Select a channel to start</div>
+  </div>
+
+  <script>
+    // EDIT THIS: Add your own stream URLs here
+    // Only use streams you have legal rights to distribute
+    const channels = [
+      { name: "Demo Stream - Big Buck Bunny", url: "https://m3u4u.com/m3u/26p5n37zqgf9xep2nv7j", category: "Demo" },
+      // { name: "Your Channel Name", url: "YOUR_M3U8_URL_HERE", category: "Live" },
+    ];
+
+    const video = document.getElementById('player');
+    const channelList = document.getElementById('channelList');
+    const nowPlaying = document.getElementById('nowPlaying');
+    const searchInput = document.getElementById('search');
+    let hls;
+
+    function playStream(channel) {
+      if (hls) hls.destroy();
+      nowPlaying.textContent = Now Playing: ${channel.name};
+      document.querySelectorAll('.channel').forEach(el => el.classList.remove('active'));
+      document.querySelector([data-url="${channel.url}"]).classList.add('active');
+
+      if (Hls.isSupported()) {
+        hls = new Hls();
+        hls.loadSource(channel.url);
+        hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED, () => video.play());
+      } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = channel.url;
+        video.play();
+      }
+    }
+
+    function renderChannels(filter = '') {
+      channelList.innerHTML = '';
+      channels
+       .filter(c => c.name.toLowerCase().includes(filter.toLowerCase()))
+       .forEach(channel => {
+          const div = document.createElement('div');
+          div.className = 'channel';
+          div.textContent = channel.name;
+          div.dataset.url = channel.url;
+          div.onclick = () => playStream(channel);
+          channelList.appendChild(div);
+        });
+    }
+[17-06-2026 13:53] Xy: searchInput.oninput = (e) => renderChannels(e.target.value);
+    renderChannels();
+
+    // Autoplay first channel if exists
+    if (channels.length > 0) playStream(channels[0]);
+  </script>
+</body>
+</html>
